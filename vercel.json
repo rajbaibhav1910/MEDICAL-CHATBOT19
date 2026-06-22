@@ -33,3 +33,35 @@
     }
   }
 }
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    },
+    {
+      "src": "static/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server.py"
+    }
+  ],
+  "env": {
+    "HF_TOKEN": "@hf_token",
+    "HF_REPO_ID": "@hf_repo_id"
+  },
+  "functions": {
+    "server.py": {
+      "maxDuration": 30
