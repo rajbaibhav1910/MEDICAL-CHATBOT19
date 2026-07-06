@@ -1,0 +1,197 @@
+<div align="center">
+
+# 🩺 Dr. Ava — AI Medical Chatbot
+
+**A Retrieval-Augmented Generation (RAG) assistant that answers medical questions using real medical documents, not guesses.**
+
+![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?logo=fastapi)
+![LangChain](https://img.shields.io/badge/LangChain-🦜-green)
+![FAISS](https://img.shields.io/badge/Vector%20Store-FAISS-orange)
+![Deployed](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
+</div>
+
+---
+
+## 📖 About
+
+Dr. Ava is an AI-powered medical assistant that answers health-related questions by retrieving relevant passages from a knowledge base of medical PDF documents, then generating a grounded, empathetic response — instead of relying purely on an LLM's memory (which can hallucinate medical facts).
+
+It's built using a **Retrieval-Augmented Generation (RAG)** pipeline:
+
+```
+User Question
+     │
+     ▼
+Embed the question (MiniLM sentence embeddings)
+     │
+     ▼
+Search FAISS vector store for the 3 most relevant document chunks
+     │
+     ▼
+Inject those chunks as context into a prompt
+     │
+     ▼
+LLM (Hugging Face hosted model) generates the answer
+     │
+     ▼
+Response returned to the user (+ optional voice output)
+```
+
+> ⚠️ **Disclaimer:** Dr. Ava is an educational/demo project. It does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider.
+
+---
+
+## ✨ Features
+
+- 🔍 **Document-grounded answers** — responses are generated from a real medical knowledge base (PDFs you provide), not just the LLM's raw memory
+- 🧠 **RAG pipeline** using LangChain + FAISS + Hugging Face embeddings
+- 🗣️ **Text-to-speech** — converts responses to audio via `pyttsx3` so Dr. Ava can "speak" answers
+- 🌐 **FastAPI backend** with a simple REST API (`/api/ask`, `/api/speak`)
+- 🛟 **Graceful fallback mode** — if no Hugging Face token is configured, the app still runs and returns a clear message instead of crashing
+- ☁️ **Vercel-ready** deployment config included
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend framework | FastAPI + Uvicorn |
+| LLM orchestration | LangChain |
+| Embeddings | `sentence-transformers/all-MiniLM-L6-v2` (Hugging Face) |
+| Vector store | FAISS |
+| LLM | Hugging Face Inference Endpoint (default: `HuggingFaceH4/zephyr-7b-beta`) |
+| Text-to-speech | pyttsx3 |
+| Deployment | Vercel |
+
+---
+
+## 📁 Project Structure
+
+```
+MEDICAL-CHATBOT19/
+├── medical_chatbot.py          # Loads PDFs, chunks text, builds the FAISS vector store
+├── connect_memory_with_llm.py  # Standalone script: query the vector store + LLM from the terminal
+├── server.py                   # FastAPI app — serves the web UI and /api/ask, /api/speak endpoints
+├── setup.py                    # One-command setup: installs deps, checks config, checks vector store
+├── install_requirments.py      # Installs core Python dependencies
+├── vercel.json                 # Vercel deployment configuration
+├── data/                       # (you add this) — source PDF documents for the knowledge base
+├── vectorstore/db_faiss/       # Generated FAISS index (created by medical_chatbot.py)
+├── static/                     # Frontend files served at "/" (index.html, etc.)
+└── .env                        # Environment variables (HF_TOKEN, HF_REPO_ID, PORT) — NEVER commit this
+```
+
+---
+
+## ⚙️ Setup & Installation
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/rajbaibhav1910/MEDICAL-CHATBOT19.git
+cd MEDICAL-CHATBOT19
+```
+
+### 2. Create a virtual environment
+```bash
+python -m venv venv
+source venv/bin/activate      # On Windows: venv\Scripts\activate
+```
+
+### 3. Install dependencies
+```bash
+python install_requirments.py
+```
+
+### 4. Configure your environment variables
+Create a `.env` file in the project root:
+```
+HF_TOKEN=your_huggingface_token_here
+HF_REPO_ID=HuggingFaceH4/zephyr-7b-beta
+PORT=8000
+```
+Get a free token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
+
+> 🔒 **Never commit your `.env` file.** Make sure it's listed in `.gitignore`.
+
+### 5. Add your medical knowledge base
+Place your source PDF documents inside a `data/` folder in the project root.
+
+### 6. Build the vector store
+```bash
+python medical_chatbot.py
+```
+This reads all PDFs in `data/`, splits them into chunks, embeds them, and saves the FAISS index to `vectorstore/db_faiss/`.
+
+### 7. Run the server
+```bash
+python server.py
+```
+Then open **http://localhost:8000** in your browser.
+
+---
+
+## 🔌 API Reference
+
+### `POST /api/ask`
+Ask a medical question.
+
+**Request body:**
+```json
+{ "question": "What are common symptoms of diabetes?" }
+```
+
+**Response:**
+```json
+{ "answer": "..." }
+```
+
+### `POST /api/speak`
+Convert a text response to speech (returns WAV audio).
+
+**Request body:**
+```json
+{ "text": "Some text to convert to speech" }
+```
+
+---
+
+## ☁️ Deployment (Vercel)
+
+This project includes a `vercel.json` already configured to deploy `server.py` as a serverless function and serve the `static/` folder directly.
+
+1. Push your code to GitHub
+2. Import the repo into [Vercel](https://vercel.com)
+3. Add `HF_TOKEN` and `HF_REPO_ID` as environment variables in the Vercel project settings (never in code)
+4. Deploy
+
+---
+
+## 🚧 Future Improvements
+
+- [ ] Add automated tests for the RAG pipeline
+- [ ] Add conversation memory (multi-turn context)
+- [ ] Add a proper `requirements.txt` with pinned versions for reproducible installs
+- [ ] Add source citation in responses (show which document/page the answer came from)
+- [ ] Containerize with Docker for consistent deployment outside Vercel
+
+---
+
+## ⚠️ Medical Disclaimer
+
+This project is for educational and demonstration purposes only. It is **not** a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of a physician or other qualified health provider with any questions regarding a medical condition.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+Built by <a href="https://github.com/rajbaibhav1910">Raj Baibhav</a>
+</div>
